@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>DockerFly</title>
+</head>
+<link rel="shortcut icon" type="image/x-icon" href="img/favicon.ico"/>
+<link rel="stylesheet" href="css/uikit/uikit.css"/>
+<script src="js/common/jquery.min.js"></script>
+<script src="js/common/vue.min.js"></script>
+<script src="js/common/uikit.js"></script>
+
+<link rel="stylesheet" href="css/main.css"/>
+<script lang="javascript" src="js/utils.js"></script>
+<script lang="javascript">
+    function init() {
+        $(".uk-nav-side").children("li").each(
+            function (index, eli) {
+                $(eli).click(
+                    function (event) {
+                        mainMenuActive(event)
+                    }
+                )
+            }
+        )
+    }
+</script>
+<body onload="init()">
+<div id="ContainerApp" class="uk-grid">
+    <div class="uk-width-1-6 sidebar">
+        <div class="uk-panel uk-panel-box" style="height: 95%;  background-color: #444;">
+            <h3 class="uk-panel-title"><img src="img/sidebar_logo.png"/></h3>
+            <ul class="uk-nav uk-nav-side uk-nav-parent-icon" data-uk-nav>
+                <h3 class="uk-nav-divider"></h3>
+                <li class="uk-active"><a href="summary.html" target="moduleFrame"><span class="icon uk-icon-dashboard"></span>Summery</a></li>
+                <h3 class="uk-nav-divider"></h3>
+                <li><a href="swarm.html" target="moduleFrame"><span class="icon uk-icon-connectdevelop"></span> Swarm</a></li>
+                <li><a href="module/node/list.html" target="moduleFrame"><span class="icon uk-icon-cube"></span > Node</a></li>
+                <li><a href="module/service/list.html" target="moduleFrame"><span class="icon uk-icon-gears"></span> Service</a></li>
+                <li><a href="module/task/list.html" target="moduleFrame"><span class="icon uk-icon-tasks"></span> Task</a></li>
+                <h3 class="uk-nav-divider"></h3>
+                <li><a href="module/container/list.html" target="moduleFrame">
+                    <span class="icon uk-icon-desktop"></span> Contianer
+                </a></li>
+                <li><a href="module/network/list.html" target="moduleFrame"><span class="icon uk-icon-sitemap"></span> Network</a></li>
+                <li><a href="module/volume/list.html" target="moduleFrame"><span class="icon uk-icon-clone"></span> Volume</a></li>
+                <li><a href="module/image/list.html" target="moduleFrame"><span class="icon uk-icon-object-group"></span> Image</a></li>
+                <h3 class="uk-nav-divider"></h3>
+                <li><a href="setting.html" target="moduleFrame"><span class="icon uk-icon-cog"></span> Setting</a></li>
+            </ul>
+        </div>
+    </div>
+    <div class="uk-width-5-6" style="padding:0px;height: 100%">
+        <div style="height: 100%;">
+            <iframe name="moduleFrame" class="uk-width-6-6" style="height: 100%;float:right" src="summary.html"></iframe>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

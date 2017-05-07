@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>DockerFly</title>
+</head>
+<link rel="shortcut icon" type="image/x-icon" href="img/favicon.ico"/>
+<link rel="stylesheet" href="css/uikit/uikit.css"/>
+<script src="js/common/jquery.min.js"></script>
+<script src="js/common/vue.min.js"></script>
+<script src="js/common/uikit.js"></script>
+
+<link rel="stylesheet" href="css/main.css"/>
+<script lang="javascript" src="js/utils.js"></script>
+<script lang="javascript" src="js/docker.js"></script>
+<script lang="javascript">
+
+    function init() {
+        dockerSettingVue = new Vue({
+            el: '#dockerSetting',
+            computed: {
+                config: function () {
+                  return getDockerFlyConfig();
+                }
+            },
+            methods:{
+                connect: function(){
+                    connectToHost(this.config)
+                    location = "summary.html"
+                }
+            }
+        });
+    }
+</script>
+<body onload="init()" class="frameBody">
+<div id="dockerSetting" class="uk-grid" style="display: none" v-show="this.config!=null">
+    <div class="uk-width-6-6">
+        <div class="uk-panel"></div>
+        <h3></h3>
+        <h3 class="uk-text-middle"><span class="icon uk-icon-cog"></span>  System setting</h3>
+        <ul class="uk-tab" data-uk-tab="{connect:'#tab-content'}">
+            <li class="uk-active">
+                <a href="#">Server</a>
+            </li>
+            <li>
+                <a href="#">Host</a>
+            </li>
+        </ul>
+        <ul id="tab-content" class="uk-switcher">
+            <li class="uk-active">
+                <h3 class="uk-text-middle">Connect docker server</h3>
+                <table id="config" class="uk-form uk-table uk-overflow-container uk-panel-box">
+                    <tbody>
+                    <tr>
+                        <td class="uk-width-1-10 uk-text-right summeryField uk-text-middle">Host:</td>
+                        <td class="uk-width-1-4">
+                            <input type="text" class="" placeholder="DockerFly host" v-model="config.host"/>
+                        </td>
+                        <td class="uk-width-1-10 uk-text-right summeryField uk-text-middle">Port:</td>
+                        <td class="uk-width-1-4">
+                            <input type="text" class="" placeholder="DockerFly port" v-model="config.port"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="uk-width-1-10 uk-text-right summeryField uk-text-middle">Timeout:</td>
+                        <td class="uk-width-1-4">
+                            <input type="text" class="" placeholder="DockerFly timeout" v-model="config.timeout"/>
+                        </td>
+                        <td class="uk-width-1-10 uk-text-right summeryField uk-text-middle">Debug:</td>
+                        <td class="uk-width-1-4">
+                            <select v-model="config.isDebug">
+                                <option value="true">true</option>
+                                <option value="false">false</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="4" class="uk-text-right">
+                            <a href="#" class="uk-button uk-button-primary" @click="connect()">Connect</a>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </li>
+        </ul>
+    </div>
+    <div class="uk-width-6-6">
+        <div style="min-height:40px;" class="uk-text-center uk-margin-bottom">
+            <div><img height="27" width="120" src="img/logo.png"/></div>
+            <div>CopyRight <span class="uk-icon-copyright"></span> Voovan Vsetful</div>
+            <div>Powered by Voovan open source framework.</div>
+            <div></div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

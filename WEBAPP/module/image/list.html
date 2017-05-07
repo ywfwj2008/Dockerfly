@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>DockerFly</title>
+</head>
+<link rel="shortcut icon" type="image/x-icon" href="../../img/favicon.ico"/>
+<link rel="stylesheet" href="../../css/uikit/uikit.css"/>
+<script src="../../js/common/jquery.min.js"></script>
+<script src="../../js/common/vue.min.js"></script>
+<script src="../../js/common/uikit.js"></script>
+
+<link rel="stylesheet" href="../../css/main.css"/>
+<script lang="javascript" src="../../js/utils.js"></script>
+<script lang="javascript">
+    doImport("org.voovan.docker.command.Image.CmdHubImageInfo")
+    doImport("org.voovan.docker.command.Image.CmdImageList")
+    doImport("org.voovan.docker.command.Image.CmdImageRemove")
+    doImport("org.voovan.docker.command.Image.CmdImageCreate")
+    doImport("org.voovan.docker.command.Image.CmdImageTag")
+
+    function init() {
+        imageListVue = new Vue({
+            el: '#imageApp',
+            data: {
+                imageList: null,
+                queryParams:{
+                    name:""
+                }
+            },
+            methods: {
+                //查询方法
+                query: function () {
+                    try {
+                        var cmdImageList = new CmdImageList();
+                        connect(cmdImageList);
+//                        cmdImageList.all(true);
+
+                        if(this.queryParams.name!=""){
+                            cmdImageList.filter(this.queryParams.name);
+                        }
+
+                        this.imageList = cmdImageList.send().sortBy("Created");
+                        cmdImageList.close();
+                        cmdImageList.release();
+                    } catch (e) {
+                        alertError(e)
+                    }
+                },
+                //移除方法
+                remove: function (image) {
+                    var selector = "<span class='uk-form'><select id='imageRepoTag' class='uk-form-width-medium'>";
+                    selector =selector + "<option value='image'>this image</option>";
+                    for(var i=0;i<image.repoTags.length;i++){
+                        selector = selector + "<option value='"+image.repoTags[i]+"'>Tag: "+image.repoTags[i]+"</option>";
+                    }
+                    selector = selector + "</select></span>";
+                    UIkit.modal.confirm("<span class='uk-text-large uk-text-danger'>Choice which one you want to remove? </span><hr/>" + selector + "", function () {
+                        try {
+                            var imageRepoTag = $('#imageRepoTag').val();
+
+                            if(imageRepoTag=="image"){
+                                imageRepoTag = shortDockerId(image.id, 12);
+                            }
+
+                            var cmdImageRemove = new CmdImageRemove(imageRepoTag);
+                            connect(cmdImageRemove);
+                            cmdImageRemove.send();
+                            cmdImageRemove.close();
+                            cmdImageRemove.release();
+                            imageListVue.query();
+                        } catch (e) {
+                            alertError(e)
+                        }
+                    });
+                },
+                //重命名
+                tag: function (image) {
+                    name = image.repoTags.length > 0 ? image.repoTags[0] : "";
+                    id = image.id
+                    UIkit.modal.prompt("<span class='uk-text-large uk-text-primary'>Images tags: (like repo:tag)</span>", name, function(newvalue){
+                        try {
+                            if(newvalue!=""){
+                                var reppAndTag = newvalue.split(":");
+                                var cCmdImageTag = new CmdImageTag(shortDockerId(image.id,12));
+                                connect(cCmdImageTag);
+                                cCmdImageTag.repo(reppAndTag[0])
+                                cCmdImageTag.tag(reppAndTag[1])
+                                cCmdImageTag.send();
+                                cCmdImageTag.close();
+                                cCmdImageTag.release();
+                            }
+                            imageListVue.query();
+                        } catch (e) {
+                            alertError(e)
+                        }
+                    });
+                }
+            }
+        });
+
+        imageListVue.query()
+    }
+</script>
+<body onload="init()" class="frameBody">
+<div id="imageApp" class="uk-grid" style="display: none" v-show="this.imageList!=null">
+    <div class="uk-width-6-6">
+        <div class="uk-panel"></div>
+        <h3></h3>
+        <div class="uk-grid uk-margin">
+            <div class="uk-width-1-2">
+                <h3 class="uk-text-middle">
+                    <span class="icon uk-icon-object-group"></span> Image manager
+                </h3>
+            </div>
+            <div class="uk-width-1-2 uk-text-right">
+                <a href="list.html"><span class="uk-icon-refresh"></span></a>
+            </div>
+        </div>
+        <div class="uk-panel uk-panel-box uk-text-bold">
+            <div class="uk-grid">
+                <div class="uk-width-5-6 uk-form">
+                    <span class="mr5">Name:</span>
+                    <input class="uk-form-width-medium"
+                           type="text" placeholder="image's name" v-model="queryParams.name"/>
+                    <a class="uk-button uk-button-small" @click="query()"><i class="uk-icon-search"></i></a>
+                </div>
+                <div class="uk-width-1-6 uk-text-right">
+                    <a href="pull.html"  class="uk-button uk-button-small uk-button-primary">
+                        <i class="uk-icon-plus-square"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <table id="imageList" class="uk-table uk-overflow-container uk-panel-box">
+            <thead>
+            <tr>
+                <th class="uk-text-center table_colume_index">NO.</th>
+                <th class="uk-width-1-10">ID</th>
+                <th class="uk-width-3-10">Name</th>
+                <th class="uk-text-center uk-width-2-10">Created</th>
+                <th class="uk-width-1-10">Size(Mb)</th>
+                <th class="uk-text-center">Operation</th>
+            </tr>
+            </thead>
+
+            <tbody>
+            <tr v-for="(image,index) in imageList">
+                <td class="uk-text-center uk-text-middle uk-text-small">{{index+1}}</td>
+                <td class="uk-text-bold uk-text-middle uk-text-success">{{image.id|shortDockerId(12)}}</td>
+                <td class="uk-text-bold uk-text-middle uk-text-primary">
+                    <span v-if="image.repoTags.length!=0" v-for="repoTag,index in image.repoTags">
+                        <code>{{repoTag}}</code> &nbsp;
+                    </span>&nbsp;
+                    <span v-if="image.repoTags.length == 0" v-for="repoDigest,index in image.repoDigests">
+                        <code>{{repoDigest.split("@")[0]}}</code>&nbsp;
+                    </span>
+                </td>
+                <td class="uk-text-center uk-text-middle">{{new Date(parseInt(image.created*1000)).format("yyyy-MM-dd hh:mm:ss")}}</td>
+                <td class="uk-text-bold uk-text-middle uk-text-danger">{{(parseInt(image.size)/1024/1024).toFixed(2)}}</td>
+                <td class="uk-text-center uk-text-middle">
+                    <div class="uk-button-group">
+                        <a :href="'viewer.html?id='+image.id" class="uk-button uk-button-primary uk-button-small">
+                            <span class="uk-icon-list-alt"></span> View
+                        </a>
+                        <div data-uk-dropdown="{mode:'click'}">
+                            <!-- 触发下拉菜单的按钮 -->
+                            <a href="" class="uk-button uk-button-primary uk-button-small"><span class="uk-icon-caret-down"></span></a>
+                            <!-- 下拉菜单 -->
+                            <div class="uk-dropdown uk-dropdown-small">
+                                <ul class="uk-nav uk-nav-dropdown uk-text-left">
+                                    <li><a href="#" @click="tag(image)"
+                                           class=" uk-text-primary"><span class="uk-icon-tags"></span> Tag</a></li>
+                                </ul>
+                                <ul class="uk-nav uk-nav-dropdown uk-text-left">
+                                    <li><a href="#" @click="remove(image)"
+                                           class=" uk-text-danger"><span class="uk-icon-trash"></span> Remove</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="uk-width-6-6">
+        <div style="min-height:40px;" class="uk-text-center uk-margin-bottom">
+            <div><img height="27" width="120" src="../../img/logo.png"/></div>
+            <div>CopyRight <span class="uk-icon-copyright"></span> Voovan Vsetful</div>
+            <div>Powered by Voovan open source framework.</div>
+            <div></div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
