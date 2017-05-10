@@ -13,9 +13,22 @@
 
 ------------------
 ###最新版本:
+ - `20170508`
+   - 界面风格显示优化
+   - 本次新增功能：
+       - 1.容器展示增加:Commit, 网络的Connect和Disconnect。
+       - 2.容器创建增加自动从镜像获取必要的信息默认到容器创建的参数,如镜像要求的端口、卷等。
+       - 3.增加镜像、网络、卷、服务、的信息展示。
+   - 增加了更多的服务和容器的创建选项。
+   - 对于用时长的操作（如:镜像搜索,镜像拉去）采用了异步的形式。
+   - 修复容器日志显示重复内容的问题。
+   - 更新 JDocker 和 voovan 到最新版本。
+
+
+
  - `20170227` 首个发布版本
 
- 请在 pull 的时候,替换版本号<version>。
+ ####请在 pull 的时候,替换版本号<version>。####
 
 ------------------
 
@@ -44,7 +57,7 @@ cd DockerFly
 
  - 直接 pull 一个 dockerfly 容器
 ```shell
-    docker pull registry.cn-hangzhou.aliyuncs.com/voovan/dockerfly:<version> 
+    docker pull helyho/dockerfly[:<version>]
     docker run \
             --name dockerfly -d \
             -v /var/run/docker.sock:/var/run/docker.sock \
@@ -55,11 +68,18 @@ cd DockerFly
 
 ------------------
 
-####功能概览
-![功能概览](http://git.oschina.net/uploads/images/2017/0227/125457_aa86c71d_116083.gif "功能概览")
-------------------
 ####容器操作
-![容器操作](http://git.oschina.net/uploads/images/2017/0227/125522_866b27ec_116083.gif "容器操作")
+![输入图片说明](https://git.oschina.net/uploads/images/2017/0510/160224_3efe4007_116083.png "在这里输入图片标题")
+####容器资源
+![输入图片说明](https://git.oschina.net/uploads/images/2017/0510/160205_e463d60d_116083.png "在这里输入图片标题")
+####容器状态
+![输入图片说明](https://git.oschina.net/uploads/images/2017/0510/160215_d527a3d4_116083.png "在这里输入图片标题")
+####创建容器
+![输入图片说明](https://git.oschina.net/uploads/images/2017/0510/160235_96f70ca0_116083.png "在这里输入图片标题")
+####创建服务
+![输入图片说明](https://git.oschina.net/uploads/images/2017/0510/160244_e717f8a4_116083.png "在这里输入图片标题")
+####拉取镜像
+![输入图片说明](https://git.oschina.net/uploads/images/2017/0510/160253_ea6d3140_116083.png "在这里输入图片标题")
 
 ------------------
 
