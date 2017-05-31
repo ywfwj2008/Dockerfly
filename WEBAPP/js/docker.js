@@ -1,6 +1,144 @@
 /**
  * Created by helyho on 2017/5/4.
  */
+
+function connect(cmd) {
+    var user = getUser();
+    var host = '127.0.0.1'
+    var port = 2735
+    var timeout = 15
+    var debug = false;
+
+    if(user!=null){
+        host = user.hosts[user.defaultHost].ipAddress;
+        port = user.hosts[user.defaultHost].port;
+        timeout = user.hosts[user.defaultHost].timeout;
+        debug = user.hosts[user.defaultHost].debug;
+    }
+
+    if(host==null || port == null) {
+        cmd.connect();
+    }else{
+        cmd.connect4(host, port, timeout, debug, "JSON");
+    }
+}
+
+function getUser(){
+    return  getSessionStorage("User");
+}
+
+function checkUser(username, password){
+    if(typeof(OperUser)=="undefined") {
+        doImport("org.voovan.dockerfly.DataOperate.OperUser")
+    }
+    try {
+        var operUser = new OperUser();
+        var user = operUser.checkUser(username, password);
+        operUser.release();
+        return user;
+    }catch(e){
+        alertError(e)
+    }
+}
+
+function modifyPassword(user, password){
+    if(typeof(OperUser)=="undefined") {
+        doImport("org.voovan.dockerfly.DataOperate.OperUser")
+    }
+    try {
+        var operUser = new OperUser();
+        var user = operUser.modifyPassword(user.userId, password);
+        operUser.release();
+        return user;
+    }catch(e){
+        alertError(e)
+    }
+}
+
+function modifyHosts(user){
+    if(typeof(OperUser)=="undefined") {
+        doImport("org.voovan.dockerfly.DataOperate.OperUser")
+    }
+    try {
+        var operUser = new OperUser();
+        var user = operUser.modifyHosts(user.userId, user.hosts);
+        operUser.release();
+        return user;
+    }catch(e){
+        alertError(e)
+    }
+}
+
+function modifyRegistrys(user){
+    if(typeof(OperUser)=="undefined") {
+        doImport("org.voovan.dockerfly.DataOperate.OperUser")
+    }
+    try {
+        var operUser = new OperUser();
+        var user = operUser.modifyRegistrys(user.userId, user.registrys);
+        operUser.release();
+        return user;
+    }catch(e){
+        alertError(e)
+    }
+}
+
+function modifyDefaultHost(user, defaultHost){
+    if(typeof(OperUser)=="undefined") {
+        doImport("org.voovan.dockerfly.DataOperate.OperUser")
+    }
+    try {
+        var operUser = new OperUser();
+        var user = operUser.modifyDefaultHost(user.userId, defaultHost);
+        operUser.release();
+        return user;
+    }catch(e){
+        alertError(e)
+    }
+}
+
+function getUserList(){
+    if(typeof(OperUser)=="undefined") {
+        doImport("org.voovan.dockerfly.DataOperate.OperUser")
+    }
+    try {
+        var operUser = new OperUser();
+        var userList = operUser.getUserList();
+        operUser.release();
+        return userList;
+    }catch(e){
+        alertError(e)
+    }
+}
+
+function addUser(user){
+    if(typeof(OperUser)=="undefined") {
+        doImport("org.voovan.dockerfly.DataOperate.OperUser")
+    }
+    try {
+        var operUser = new OperUser();
+        var userList = operUser.addUser(user);
+        operUser.release();
+        return userList;
+    }catch(e){
+        alertError(e)
+    }
+}
+
+function delUser(user){
+    if(typeof(OperUser)=="undefined") {
+        doImport("org.voovan.dockerfly.DataOperate.OperUser")
+    }
+    try {
+        var operUser = new OperUser();
+        var userList = operUser.delUser(user.userId);
+        operUser.release();
+        return userList;
+    }catch(e){
+        alertError(e)
+    }
+}
+
 function runCmd(cmdStr){
     if(typeof(CmdExecCreate)=="undefined") {
         doImport("org.voovan.docker.command.Exec.CmdExecCreate")
@@ -18,7 +156,7 @@ function runCmd(cmdStr){
     cmdExecCreate.release();
 
     var cmdExecStart = new CmdExecStart(eval("k="+execId).Id);
-    cmdExecStart.connect(60);
+    cmdExecStart.connect1(60);
     cmdExecStart.tty(true);
     cmdExecStart.send();
 
@@ -96,7 +234,7 @@ function getSwarmInfo(){
         cmdSwarmInfo.release();
         return swarmInfo;
     } catch (e) {
-        console.log(e)
+        alertError(e)
         return null;
     }
 }

@@ -69,11 +69,11 @@
                     },
                     port: {
                         ports:[],
-                        add: function(hostPort,protocol,canRemove){
+                        add: function(containerPort,protocol,canRemove){
                             var port = {};
-                            port.hostPort = hostPort;
-                            port.containerPort = null;
-                            port.protocol = "tcp";
+                            port.hostPort = null;
+                            port.containerPort = containerPort;
+                            port.protocol = protocol==null?"tcp":protocol;
                             port.canRemove = canRemove==null?true:canRemove;;
                             this.ports.push(port);
                         },
@@ -100,6 +100,9 @@
             watch:{
                 "createParams.image" : function(newVal, oldVal){
                     var imageDetail = getImageDetail(newVal);
+
+                    this.createParams.workDir = imageDetail.config.workingDir;
+                    this.createParams.user = imageDetail.config.user;
 
                     //处理 EntryPoint
                     this.createParams.entrypoint = "";
@@ -140,6 +143,22 @@
                 },
                 imageList: function () {
                     return getImages();
+                },
+                imageRepoTags: function () {
+                    var imageRepoTags = [];
+                    for(imageIndex in this.imageList){
+                        var image = this.imageList[imageIndex]
+                        if(typeof(image)!="function" && image.repoTags!=null) {
+                            for (repoTagIndex in image.repoTags) {
+
+                                var repoTag = image.repoTags[repoTagIndex]
+                                if(typeof(repoTag)!="function" && repoTag!=null) {
+                                    imageRepoTags.push(repoTag);
+                                }
+                            }
+                        }
+                    }
+                    return imageRepoTags;
                 },
                 networkList: function () {
                     return getNetworks();
@@ -242,16 +261,13 @@
                         var blockDialog = openBlockDialog(" Creating service ...");
                         cmdServiceCreate.send(function(){
                             blockDialog.hide()
-                            alert("<span class='uk-text-large uk-text-primary'>Service <span class='uk-text-bold uk-text-danger'>" +
-                                serviceListVue.createParams.name +
-                                "</span> created.</span>");
-                            window.location = "list.html"
                             cmdServiceCreate.close();
                             cmdServiceCreate.release();
-                            serviceListVue.query()
-                        }, function(){
+                            window.location = "list.html"
+                        }, function(status, errMsg){
                             blockDialog.hide()
-                            alertError("Create service failed");
+                            var errorObj = eval("error="+errMsg)
+                            alertError("Create service failed. "+errorObj.errMsg);
                             cmdServiceCreate.close();
                             cmdServiceCreate.release();
                         });
@@ -261,6 +277,12 @@
                 },
             }
         });
+
+        //默认镜像创建
+        var image = getQueryString("image");
+        if(image!=null) {
+            serviceListVue.createParams.image = image;
+        }
     }
 </script>
 <body onload="init()" class="frameBody">
@@ -272,17 +294,16 @@
                 <table class="uk-table uk-overflow-service uk-panel-box">
                     <tr>
                         <td class="dialogField uk-width-1-10">Name:</td>
-                        <td><input class="uk-form-width-medium" type="text"
+                        <td><input class="uk-form-width-large" type="text"
                                    placeholder="e.g. myService" v-model="createParams.name"/></td>
                     </tr>
                     <tr>
                         <td class="dialogField">Image:</td>
                         <td>
-                            <select class="uk-form-width-medium" v-model="createParams.image" autocomplete="off">
-                                <option v-for="(image,index) in imageList"
-                                        :value="image.repoTags[0]"
-                                        v-if="image.repoTags.length!=0">
-                                    <span class="uk-text-bold">{{image.repoTags[0]}}</span>
+                            <select class="uk-form-width-large" v-model="createParams.image" autocomplete="off">
+                                <option v-for="(repoTag,index) in imageRepoTags"
+                                        :value="repoTag">
+                                    <span class="uk-text-bold">{{repoTag}}</span>
                                 </option>
                             </select>
                         </td>
@@ -432,10 +453,10 @@
                                                                   theme="uk-button-success  uk-button-mini"></c-switch>
                                                         &nbsp;&nbsp;
                                                         <input class="uk-form-width-medium" type="number"
-                                                               :disabled="!port.canRemove"
                                                                placeholder="e.g. 80 on host" v-model="port.hostPort"/>
                                                         &nbsp;:&nbsp;
                                                         <input class="uk-form-width-medium" type="number"
+                                                               :disabled="!port.canRemove"
                                                                placeholder="e.g. 80 on container" v-model="port.containerPort"/>
                                                     </div>
                                                     <div class="uk-width-1-10" v-if="port.canRemove">

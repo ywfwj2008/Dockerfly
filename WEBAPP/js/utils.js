@@ -1,6 +1,38 @@
 /**
  * =======================工具函数=======================
  */
+    //保存数据到SessionStorage中
+    function setSessionStorage(key, value){
+        window.sessionStorage.setItem(key, ( typeof(value)=="string")?value:JSON.stringify(value));
+    }
+
+    //删除到SessionStorage中的数据
+    function removeSessionStorage(key) {
+        window.sessionStorage.removeItem(key);
+    }
+
+    //读取SessionStorage中的数据
+    function getSessionStorage(key){
+        var value = window.sessionStorage.getItem(key);
+        var result = null;
+        try{
+            result = eval("sessionStorageTmp = "+window.sessionStorage.getItem("User"));
+        }catch(e){
+            result = value;
+        }
+
+        return result;
+    }
+
+    function getHost() {
+        url = window.location.href;
+        first = url.indexOf("//");
+        last = url.indexOf("/", first + 2);
+        host = url.substring(first + 2, last);
+        protocol = url.substring(0, first);
+        return protocol+"//"+host;
+    }
+
     //菜单选中标识
     function mainMenuActive(event){
         $(event.target).parent().parent().children("li[class*='uk-active']").each(function(index,eli){
@@ -32,27 +64,52 @@
         return new Date().getTime();
     }
 
-    function alert(msg){
-        if(window.parent!=window) {
-            window.parent.UIkit.modal.alert(msg);
-        }else{
-            UIkit.modal.alert(msg);
-        }
-    }
+    function dockerFlyAlert(header, content, hideFunction ,options) {
 
-    function openBlockDialog(msg){
-        var content = "<div class='uk-text-center'> \
-                        <img src='../../img/loading.gif'/><br/><br/> \
-                        <div class='uk-text-warning uk-text-bold uk-text-large' style='margin-top:-80px'>"
-                        + msg +
-                        "</div></div>";
-        return window.parent.UIkit.modal.blockUI(content);
+        options = UIkit.$.extend(true, {bgclose:false, keyboard:false, modal:false, labels:UIkit.modal.labels}, options);
+
+        var modal = UIkit.modal.dialog(([
+            '<div class="uk-modal-header">',
+            '    <span>'+header+'</span>',
+            '</div>',
+            '<p>'+content+'</p>',
+            '<div class="uk-modal-footer uk-text-right">',
+            '    <button type="button" class="uk-button uk-button-primary uk-modal-close">Close</button>',
+            '</div>'
+        ]).join(""), options);
+
+        modal.on('show.uk.modal', function(){
+            setTimeout(function(){
+                modal.element.find('button:first').focus();
+            }, 50);
+        });
+
+        modal.on('hide.uk.modal', function(){
+            if(hideFunction!=null) {
+                hideFunction();
+            }
+        });
+
+        return modal.show();
+    };
+
+    function alert(header, msg) {
+        if(arguments.length == 1){
+            msg = header;
+            header = "";
+        }
+
+        if(window.parent!=window) {
+            dockerFlyAlert(header, msg);
+        }else{
+            dockerFlyAlert(header, msg);
+        }
     }
 
     //展示错误信息
     function alertError(e){
-        var errMsg = "<h3 class='uk-text-danger uk-text-bold'>Ops , We hava an error!</h3>" +
-            "<h3 style='margin: 0px 15px 0px 15px;'>";
+        var header = "<h3 class='uk-text-danger uk-text-bold'>Ops , The operation failure !</h3>";
+        var errMsg = "<h3 style='margin: 0px 15px 0px 15px;word-wrap: break-word;word-break: normal;'>";
         if(e instanceof Error) {
             if(e.name == "Error") {
                 var errObj = eval("err_" + currentTimeMills() + " = " + e.message);
@@ -61,11 +118,15 @@
                     errMsg = errMsg + "Network time out, try connect again."
                 } else if (errObj.errMsg != null) {
                     errMsg = errMsg + errObj.errMsg.replaceAll("\\\"", "\"");
+                } else if(errObj.errClass=="org.voovan.docker.network.DockerClientException"){
+                   e.name="NetworkError";
                 } else {
                     errMsg = errMsg + errObj.errClass;
                 }
-            } else if(e.name == "NetworkError"){
-                errMsg = "Network has some problem, check it."
+            }
+
+            if(e.name == "NetworkError"){
+                errMsg = errMsg + "Network has some problem, check it."
             }
         } else if(typeof(e)=="string"){
             errMsg = errMsg + e;
@@ -73,18 +134,37 @@
             errMsg = errMsg + "[" + e.name+ "] "+ e.message;
         }
         errMsg = errMsg+"</h3>"
-        alert(errMsg);
+
+        if(e instanceof Error && e.name == "Error") {
+            var errObj = eval("err_" + currentTimeMills() + " = " + e.message);
+            //如果是未登录,则返回登录页面
+            if( errObj.errClass=="NOT_LOGIN") {
+                dockerFlyAlert(header, errMsg, function () {
+                    if (window.parent != window) {
+                        window.parent.location = getHost() + "/login.html";
+                    } else {
+                        window.location = getHost() + "/login.html";
+                    }
+                });
+            }
+            //如果是权限不具备
+            else if(errObj.errClass=="NO_RIGHT"){
+                dockerFlyAlert(header, errMsg);
+            } else {
+                dockerFlyAlert(header, errMsg);
+            }
+        }else{
+            dockerFlyAlert(header, errMsg)
+        }
     }
 
-    function connect(cmd) {
-        host = getQueryString("host");
-        port = getQueryString("port");
-
-        if(host==null || port == null) {
-            cmd.connect();
-        }else{
-            cmd.connect(host, port);
-        }
+    function openBlockDialog(msg){
+        var content = "<div class='uk-text-center'> \
+                            <img src='../../img/loading.gif'/><br/><br/> \
+                            <div class='uk-text-warning uk-text-bold uk-text-large' style='margin-top:-80px'>"
+            + msg +
+            "</div></div>";
+        return window.parent.UIkit.modal.blockUI(content);
     }
 
     //创建终端
@@ -143,7 +223,10 @@
 
     function strToDate(value){
         value = value.replace("T"," ");
-        value = value.substr(0,value.indexOf("."));
+        value = value.replace("Z","");
+        if(value.indexOf('.')>0) {
+            value = value.substr(0, value.indexOf("."));
+        }
         return value
     }
 
@@ -162,6 +245,25 @@
             str = str.replace(sptr, sptr1);
         }
         return str;
+    }
+
+    String.prototype.endsWith=function(str){
+        if(str==null||str==""||this.length==0||str.length>this.length)
+            return false;
+        if(this.substring(this.length-str.length)==str)
+            return true;
+        else
+            return false;
+        return true;
+    }
+    String.prototype.startsWith=function(str){
+        if(str==null||str==""||this.length==0||str.length>this.length)
+            return false;
+        if(this.substr(0,str.length)==str)
+            return true;
+        else
+            return false;
+        return true;
     }
 
     // 对Date的扩展，将 Date 转化为指定格式的String

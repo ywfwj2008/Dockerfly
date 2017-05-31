@@ -59,11 +59,11 @@
                     },
                     port: {
                         ports:[],
-                        add: function(hostPort,protocol,canRemove){
+                        add: function(containerPort,protocol,canRemove){
                             var port = {};
-                            port.hostPort = hostPort;
-                            port.containerPort = "";
-                            port.protocol = "tcp";
+                            port.hostPort = "";
+                            port.containerPort = containerPort;
+                            port.protocol = protocol==null?"tcp":protocol;
                             port.canRemove = canRemove==null?true:canRemove;;
                             this.ports.push(port);
                         },
@@ -109,6 +109,22 @@
                 imageList: function () {
                     return getImages();
                 },
+                imageRepoTags: function () {
+                    var imageRepoTags = [];
+                    for(imageIndex in this.imageList){
+                        var image = this.imageList[imageIndex]
+                        if(typeof(image)!="function" && image.repoTags!=null) {
+                            for (repoTagIndex in image.repoTags) {
+
+                                var repoTag = image.repoTags[repoTagIndex]
+                                if(typeof(repoTag)!="function" && repoTag!=null) {
+                                    imageRepoTags.push(repoTag);
+                                }
+                            }
+                        }
+                    }
+                    return imageRepoTags;
+                },
                 networkList: function () {
                     return getNetworks();
                 },
@@ -116,6 +132,9 @@
             watch:{
                 "createParams.image" : function(newVal, oldVal){
                     var imageDetail = getImageDetail(newVal);
+
+                    this.createParams.workDir = imageDetail.config.workingDir;
+                    this.createParams.user = imageDetail.config.user;
 
                     //处理 EntryPoint
                     this.createParams.entrypoint = "";
@@ -139,7 +158,7 @@
                     this.createParams.port.ports = [];
                     for(var exposedPort in imageDetail.config.exposedPorts){
                         var portConfig = exposedPort.split("/");
-                        this.createParams.port.add(portConfig[0], portConfig[1], false)
+                        this.createParams.port.add(portConfig[0] , portConfig[1], false)
                     }
 
                     //处理卷
@@ -257,11 +276,20 @@
                         }
 
                         entity.release();
-                        cmdContainerCreate.send();
-                        alert("Create container success.");
-                        window.location = "list.html"
-                        cmdContainerCreate.close();
-                        cmdContainerCreate.release();
+
+                        var blockDialog = openBlockDialog("Creating Container...");
+                        cmdContainerCreate.send(function(){
+                            blockDialog.hide();
+                            cmdContainerCreate.close();
+                            cmdContainerCreate.release();
+                            window.location = "list.html"
+                        }, function(status, errMsg){
+                            blockDialog.hide();
+                            var errorObj = eval("errorObj="+errMsg)
+                            alertError("Create container failed. "+errorObj.errMsg);
+                            cmdContainerCreate.close();
+                            cmdContainerCreate.release();
+                        });
 
                     } catch (e) {
                         alertError(e);
@@ -269,6 +297,12 @@
                 }
             }
         });
+
+        //默认镜像创建
+        var image = getQueryString("image");
+        if(image!=null) {
+            containerCreateVue.createParams.image = image;
+        }
     }
 </script>
 <body onload="init()" class="frameBody">
@@ -280,16 +314,16 @@
             <table class="uk-table uk-overflow-container uk-panel-box">
                 <tr>
                     <td class="dialogField uk-width-1-10">Name:</td>
-                    <td><input class="uk-form-width-medium" type="text"
+                    <td><input class="uk-form-width-large" type="text"
                                placeholder="e.g. myContainer" v-model="createParams.name"/></td>
                 </tr>
                 <tr>
                     <td class="dialogField">Image:</td>
                     <td>
-                        <select class="uk-form-width-medium" v-model="createParams.image">
-                            <option v-for="image in imageList"
-                                    :value="image.repoTags[0]"
-                                    v-if="image.repoTags.length!=0">{{image.repoTags[0]}}
+                        <select class="uk-form-width-large" v-model="createParams.image" autocomplete="off">
+                            <option v-for="(repoTag,index) in imageRepoTags"
+                                    :value="repoTag">
+                                <span class="uk-text-bold">{{repoTag}}</span>
                             </option>
                         </select>
                     </td>
@@ -433,10 +467,10 @@
                                                               theme="uk-button-success uk-button-mini"></c-switch>
                                                     &nbsp;&nbsp;
                                                     <input class="uk-form-width-medium" type="number"
-                                                           :disabled="!port.canRemove"
                                                            placeholder="e.g. 80 on host" v-model="port.hostPort"/>
                                                     &nbsp;:&nbsp;
                                                     <input class="uk-form-width-medium" type="number"
+                                                           :disabled="!port.canRemove"
                                                            placeholder="e.g. 80 on container" v-model="port.containerPort"/>
 
                                                 </div>
