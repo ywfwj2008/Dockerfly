@@ -25,7 +25,7 @@
     doImport("org.voovan.docker.command.Exec.CmdExecStart")
 
     function init() {
-        viewerVue = new Vue({
+        containerViewerVue = new Vue({
             el: '#viewerApp',
             data: {
                 logInfo :{
@@ -40,7 +40,7 @@
                 execInfo: {
                     cmd: "/bin/sh",
                     terminal: null,
-                    interval : 150,
+                    interval : 200,
                     loop : null,
                     cmdObject: null
                 }
@@ -69,19 +69,21 @@
                         }
 
                         //构造终端面板
-                        if(viewerVue.logInfo.terminal==null){
-                            viewerVue.logInfo.terminal = terminal("logPanel")
+                        if(this.logInfo.terminal==null){
+                            this.logInfo.terminal = terminal("logPanel")
                         }
 
                         var cmdContainerLogs = new CmdContainerLogs(this.viewContainer.id);
                         cmdContainerLogs.connect1(60);
                         cmdContainerLogs.tail(this.logInfo.lineCount);
 
-                        var logData = cmdContainerLogs.send();
-                        logData = logData.replaceAll("\r", "")
-                        logData = logData.replaceAll("\n", "\u0000")
-                        logData = logData.replaceAll("\u0000", "\r\n");
-                        viewerVue.logInfo.terminal.write(logData);
+                        var logData = cmdContainerLogs.send().split("\u000a");
+                        for(var logIndex in logData){
+                            var logLine = logData[logIndex];
+                            if(!(logLine instanceof Function) && logIndex != logData.length-1) {
+                                this.logInfo.terminal.write(logLine + "\r\n");
+                            }
+                        }
 
                         var cmdContainerAttach = new CmdContainerAttach(this.viewContainer.id);
                         this.logInfo.cmdObject = cmdContainerAttach;
@@ -99,12 +101,12 @@
                                         logData = logData.replaceAll("\r", "")
                                         logData = logData.replaceAll("\n", "\u0000")
                                         logData = logData.replaceAll("\u0000", "\r\n");
-                                        viewerVue.logInfo.terminal.write(logData);
+                                        containerViewerVue.logInfo.terminal.write(logData);
                                     } else {
-                                        viewerVue.logStop();
+                                        containerViewerVue.logStop();
                                     }
                                 }catch(e){
-                                    viewerVue.logStop();
+                                    containerViewerVue.logStop();
                                     alertError(e)
                                 }
                             }, this.logInfo.interval
@@ -129,8 +131,8 @@
                 },
 
                 logClear: function(){
-                    viewerVue.logInfo.timeStamp = null;
-                    viewerVue.logInfo.terminal.clear();
+                    this.logInfo.timeStamp = null;
+                    this.logInfo.terminal.clear();
                 },
 
                 processView: function(){
@@ -201,8 +203,8 @@
                             //绑定键盘输入动作
                             this.execInfo.terminal.on("data", function(data){
                                 if(data.length==1) {
-                                    if(viewerVue.execInfo.cmdObject!=null) {
-                                        viewerVue.execInfo.cmdObject.sendData(data);
+                                    if(containerViewerVue.execInfo.cmdObject!=null) {
+                                        containerViewerVue.execInfo.cmdObject.sendData(data);
                                     }
                                 }
                             })
@@ -215,13 +217,13 @@
                                 try {
                                     var execData = cmdExecStart.loadStream();
                                     if (execData != null && execData!="") {
-                                        viewerVue.execInfo.terminal.write(execData);
+                                        containerViewerVue.execInfo.terminal.write(execData);
                                     }
                                     if(execData == null){
-                                        viewerVue.execStop();
+                                        containerViewerVue.execStop();
                                     }
                                 }catch (e){
-                                    viewerVue.execStop();
+                                    containerViewerVue.execStop();
                                     alertError(e)
                                 }
                             }, this.execInfo.interval);
@@ -236,22 +238,22 @@
                     this.execInfo.loop = null;
                         try {
                             if (this.execInfo.cmdObject != null) {
-                                this.execInfo.cmdObject.close();
-                                this.execInfo.cmdObject.release();
+                                //this.execInfo.cmdObject.close();
+                                //this.execInfo.cmdObject.release();
                             }
                         }catch(e){}
                     this.execInfo.cmdObject = null;
                 },
 
                 execClear: function(){
-                    viewerVue.execInfo.terminal.clear();
+                    this.execInfo.terminal.clear();
                 },
             }
         });
 
-        if(viewerVue.viewContainer.state.status=="running") {
-            viewerVue.processView();
-            viewerVue.statsView();
+        if(containerViewerVue.viewContainer.state.status=="running") {
+            containerViewerVue.processView();
+            containerViewerVue.statsView();
         }
     }
 </script>
@@ -283,7 +285,7 @@
                         <tbody>
                         <tr>
                             <td class="uk-width-1-10 uk-text-right summeryField">ID </td>
-                            <td class="uk-text-bold">{{viewContainer.id |shortDockerId(12)}}</td>
+                            <td class="uk-text-bold">{{viewContainer.id |shortString(12)}}</td>
                         </tr>
                         <tr>
                             <td class="uk-width-1-10 uk-text-right summeryField">Name </td>
@@ -291,7 +293,7 @@
                         </tr>
                         <tr>
                             <td class="uk-width-1-10 uk-text-right summeryField">Image </td>
-                            <td class="uk-text-success">{{viewContainer.image |shortDockerId(12)}}</td>
+                            <td class="uk-text-success">{{viewContainer.image |shortString(12)}}</td>
                         </tr>
                         <tr v-if="viewContainer.config.workingDir!=''">
                             <td class="uk-width-1-10 uk-text-right summeryField">WorkingDir </td>
@@ -395,7 +397,7 @@
                         <tbody>
                         <tr class="uk-text-center" v-for=" (value, key) in viewContainer.networkSettings.networks">
                             <td class="uk-text-success uk-text-bold">
-                                <a :href="'../network/viewer.html?id='+value.networkId">{{value.networkId | shortDockerId(12)}}</a>
+                                <a :href="'../network/viewer.html?id='+value.networkId">{{value.networkId | shortString(12)}}</a>
                             </td>
                             <td>{{key}}</td>
                             <td>{{value.gateway}}</td>
@@ -583,7 +585,7 @@
     <div class="uk-width-6-6">
         <div style="min-height:40px;" class="uk-text-center uk-margin-bottom">
             <div><img height="27" width="120" src="../../img/logo.png"/></div>
-            <div>CopyRight <span class="uk-icon-copyright"></span> Voovan Vsetful</div>
+            <div>Copyright <span class="uk-icon-copyright"></span> Voovan Vsetful</div>
             <div>Powered by Voovan open source framework.</div>
             <div></div>
         </div>

@@ -19,7 +19,7 @@
     doImport("org.voovan.docker.command.Network.CmdNetworkDisConnect")
 
     function init() {
-        viewerVue = new Vue({
+        networkViewerVue = new Vue({
                 el: '#viewerApp',
                 computed: {
                     viewNetwork: function () {
@@ -78,7 +78,7 @@
                         <tbody>
                         <tr>
                             <td class="uk-width-1-10 uk-text-right summeryField">ID </td>
-                            <td class="uk-text-bold">{{viewNetwork.id |shortDockerId(12)}}</td>
+                            <td class="uk-text-bold">{{viewNetwork.id |shortString(12)}}</td>
                         </tr>
                         <tr>
                             <td class="uk-width-1-10 uk-text-right summeryField">Name </td>
@@ -163,18 +163,20 @@
                         <th class="uk-width-1-5 uk-text-center">Disconnect</th>
                         </thead>
                         <tbody>
-                        <tr v-for="(value, id) in viewNetwork.containers">
+                        <tr v-for="(container, id) in viewNetwork.containers">
                             <td class="uk-text-center">
-                                <a :href="'../container/viewer.html?id='+id" class="uk-text-danger uk-text-bold">{{id  |shortDockerId(12)}}</a>
+                                {{id  |shortString(12)}}
                             </td>
                             <td class="">
-                                <span class="uk-text-primary">{{value.name}}</span>
+                                <a :href="'../container/viewer.html?id='+id" class="uk-text-danger uk-text-bold">
+                                    <span class="uk-text-primary">{{container.name}}</span>
+                                </a>
                             </td>
                             <td class="uk-text-center">
-                                <span class="uk-text-danger">{{value.ipv4Address}}</span>
+                                <span class="uk-text-danger">{{container.ipv4Address}}</span>
                             </td>
                             <td class="uk-text-center">
-                                <span class="uk-text-warning">{{value.macAddress}}</span>
+                                <span class="uk-text-warning">{{container.macAddress}}</span>
                             </td>
                             <td class="uk-text-center">
                                 <span class="uk-text-primary">
@@ -191,7 +193,7 @@
     <div class="uk-width-6-6">
         <div style="min-height:40px;" class="uk-text-center uk-margin-bottom">
             <div><img height="27" width="120" src="../../img/logo.png"/></div>
-            <div>CopyRight <span class="uk-icon-copyright"></span> Voovan Vsetful</div>
+            <div>Copyright <span class="uk-icon-copyright"></span> Voovan Vsetful</div>
             <div>Powered by Voovan open source framework.</div>
             <div></div>
         </div>

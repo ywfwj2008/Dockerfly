@@ -183,7 +183,7 @@
                 <td class="uk-text-center uk-text-middle uk-text-small">{{index+1}}</td>
                 <td class="uk-text-middle uk-text-bold uk-text-primary uk-text-small">
                     <span v-if='node.managerStatus.leader=="true"' class="uk-text-danger uk-icon-leaf" title="Leader"></span>
-                    {{node.id|shortDockerId(12)}}
+                    {{node.id|shortString(12)}}
                 </td>
                 <td class="uk-text-middle ">
                     <span class="uk-text-warning">
@@ -268,7 +268,7 @@
     <div class="uk-width-6-6">
         <div style="min-height:40px;" class="uk-text-center uk-margin-bottom">
             <div><img height="27" width="120" src="../../img/logo.png"/></div>
-            <div>CopyRight <span class="uk-icon-copyright"></span> Voovan Vsetful</div>
+            <div>Copyright <span class="uk-icon-copyright"></span> Voovan Vsetful</div>
             <div>Powered by Voovan open source framework.</div>
             <div></div>
         </div>

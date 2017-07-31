@@ -1,18 +1,18 @@
 ![DockerFly](http://git.oschina.net/uploads/images/2017/0227/130240_f5a011b5_116083.png "DockerFly")
 ------------------
 
-##### Dockerfly是基于 Docker1.12+ (Docker API 1.24+) 开发出Docker 管理工具,提供里最基本的基于 Docker 的管理功能,目的是能够方便广大Docker初学者以及 Docker 管理员能够快速的进行Docker 容器的管理和维护。
-
+#####Dockerfly是基于 Docker1.12+ (Docker API 1.24+) 开发出Docker 管理工具,提供里最基本的基于 Docker 的管理功能,目的是能够方便广大Docker初学者以及 Docker 管理员能够快速的进行Docker 容器的管理和维护。
+------------------
 > 使用 dockerfly 可以管理docker中 swarm、container、network、volume、image 等等你在 docker 中想管理的所有东西。
-> 
+
 > 通过 dockerfly 的swarm管理你可以轻松的构建起一个基于 Docker 原生的集群系统。
-> 
+
 > 当然首先你要懂 Docker 不要拿他当虚拟机。
 
-**交流QQ群：** 454201740
+**交流QQ群：**454201740
 
 ------------------
-### 最新版本:
+###最新版本:
  - `20170526`
    - 增加了用户管理和基本的权限控制
    - 增加了 Registry 的管理
@@ -38,13 +38,13 @@
 
  - `20170227` 首个发布版本
 
-#### 请在 pull 的时候,替换版本号<version>。 ####
+####请在 pull 的时候,替换版本号<version>。####
 
 ------------------
 
-#### feature:
-##### 自发布之日起,得到了各位朋友的支持,也给我了更多的信心,我会持续支持本项目的开发。
-##### 有新的建议大家可以用 feature 标签 提交 issues,我会根据功能的相互依赖性以及其使用的广泛型,编排版本.
+####feature:
+#####自发布之日起,得到了各位朋友的支持,也给我了更多的信心,我会持续支持本项目的开发。
+#####有新的建议大家可以用 feature 标签 提交 issues,我会根据功能的相互依赖性以及其使用的广泛型,编排版本.
 
  - ~~权限管理，每个用户只能管理自己创建的容器、服务、卷、网络等资源。~~
  - ~~服务节点管理所有加入该服务节点的容器、卷等等资源。~~
@@ -53,7 +53,7 @@
 
 
 ------------------
-### 使用方法
+###使用方法
  - Clone 后在本地使用
 ```shell
 git clone https://git.oschina.net/helyho/DockerFly.git
@@ -80,22 +80,22 @@ cd DockerFly
 
 ------------------
 
-#### 容器操作
+####容器操作
 ![输入图片说明](https://git.oschina.net/uploads/images/2017/0510/160224_3efe4007_116083.png "在这里输入图片标题")
-#### 容器资源
+####容器资源
 ![输入图片说明](https://git.oschina.net/uploads/images/2017/0510/160205_e463d60d_116083.png "在这里输入图片标题")
-#### 容器状态
+####容器状态
 ![输入图片说明](https://git.oschina.net/uploads/images/2017/0510/160215_d527a3d4_116083.png "在这里输入图片标题")
-#### 创建容器
+####创建容器
 ![输入图片说明](https://git.oschina.net/uploads/images/2017/0510/160235_96f70ca0_116083.png "在这里输入图片标题")
-#### 创建服务
+####创建服务
 ![输入图片说明](https://git.oschina.net/uploads/images/2017/0510/160244_e717f8a4_116083.png "在这里输入图片标题")
-#### 拉取镜像
+####拉取镜像
 ![输入图片说明](https://git.oschina.net/uploads/images/2017/0510/160253_ea6d3140_116083.png "在这里输入图片标题")
 
 ------------------
 
-### 相关项目
+###相关项目
 Dockerfly 是一个开源项目Voovan 的子项目,如果您觉得软件好用请推广给你的朋友并请您抽出宝贵时间 Star 一下项目。感谢各位的支持！！！
 
 **Voovan项目**

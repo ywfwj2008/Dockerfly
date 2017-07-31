@@ -199,26 +199,46 @@
         return value.substr(1,value.length)
     }
 
-    function shortDockerId(value,length){
+    function shortString(value,length){
         if(value==undefined){
             return null;
         }
 
-        if(value.startsWith("sha256:")){
-            value = value.replace("sha256:","")
-            value = value.substr(0, length);
-        }
+        if(value.length > length){
+            if(value.startsWith("sha256:")){
+                value = value.replace("sha256:","")
+                value = value.substr(0, length);
+            } else if(value.indexOf("@")>0){
+                value = value.substr(0, value.indexOf("@"));
+                value = value.substr(0, length)
+                value = value;
+            } else if(value.indexOf(".")>0 && value.length > 16){
+                value = value.substr(0, length);
+            } else{
+                value = value.substr(0,length);
+            }
 
-        if(value.indexOf("@")>0){
-            value = value.substr(0, value.indexOf("@"));
-            value = value.substr(0, length);
-        }
-
-        if(value.indexOf(".") && value.length > 16){
-            value = value.substr(0,length);
+            value = value;
         }
 
         return value;
+    }
+
+    function shortNumber(value){
+        if(value < 1000){
+            return value;
+        }
+        else if(value > 1000){
+            return (value/1000).toFixed(1)+" K"
+        }
+
+        else if(value > 10000){
+            return (value/10000).toFixed(1)+" W"
+        }
+
+        else if(value > 1000000){
+            return (value/1000000).toFixed(1)+" M"
+        }
     }
 
     function strToDate(value){
@@ -232,8 +252,9 @@
 
     Vue.filter('delFirestChar',delFirestChar);
 
-    Vue.filter('shortDockerId',shortDockerId);
+    Vue.filter('shortString',shortString);
     Vue.filter('strToDate',strToDate);
+    Vue.filter('shortNumber',shortNumber);
 
 /**
  * =======================基础类扩展函数=======================

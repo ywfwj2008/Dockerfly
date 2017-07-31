@@ -97,21 +97,19 @@
                             connect(cmdContainerStart);
 
                             var blockDialog = openBlockDialog("Starting Container...");
-                            cmdContainerStart.send(function(){
+                            cmdContainerStart.send(function(msg){
                                 blockDialog.hide();
                                 alert("<span class='uk-text-large uk-text-primary'>Container <span class='uk-text-large uk-text-danger'>"+delFirestChar(container.names[0])+"</span> started.</span>")
                                 cmdContainerStart.close();
                                 cmdContainerStart.release();
                                 containerListVue.query();
-                            }, function(){
+                            }, function(status, errMsg){
                                 blockDialog.hide();
-                                alertError("Kill container "+delFirestChar(container.names[0])+" failed");
+                                var errorObj = eval("errorObj="+errMsg)
+                                alertError("Kill container "+delFirestChar(container.names[0])+" failed <br/>"+errorObj.errMsg);
                                 cmdContainerStart.close();
                                 cmdContainerStart.release();
                             });
-
-                            cmdContainerStart.close();
-                            cmdContainerStart.release()
                         }
                         this.query()
                     } catch (e) {
@@ -127,15 +125,15 @@
                         cmdContainerStop.waitForKill(30);
 
                         var blockDialog = openBlockDialog("Stoping Container...");
-                        cmdContainerStop.send(function(){
+                        cmdContainerStop.send(function(msg){
                             blockDialog.hide();
                             alert("<span class='uk-text-large uk-text-primary'>Container <span class='uk-text-large uk-text-danger'>"+delFirestChar(container.names[0])+"</span> stoped.</span>")
                             cmdContainerStop.close();
                             cmdContainerStop.release();
                             containerListVue.query();
-                        }, function(){
+                        }, function(status, errMsg){
                             blockDialog.hide();
-                            alertError("Stop container "+delFirestChar(container.names[0])+" failed, you can wait a moment or try to Kill this container");
+                            alertError("Stop container "+delFirestChar(container.names[0])+" failed, Docker still try to stoping this container, you can wait a moment and then refresh this page or try to Kill this container ");
                             cmdContainerStop.close();
                             cmdContainerStop.release();
                             containerListVue.query();
@@ -151,15 +149,16 @@
                         connect(cmdContainerKill);
 
                         var blockDialog = openBlockDialog("Killing Container...");
-                        cmdContainerKill.send(function(){
+                        cmdContainerKill.send(function(msg){
                             blockDialog.hide();
                             alert("<span class='uk-text-large uk-text-primary'>Container <span class='uk-text-large uk-text-danger'>"+delFirestChar(container.names[0])+"</span> killed.</span>")
                             cmdContainerKill.close();
                             cmdContainerKill.release();
                             containerListVue.query();
-                        }, function(){
+                        }, function(status, errMsg){
                             blockDialog.hide();
-                            alertError("Kill container "+delFirestChar(container.names[0])+" failed");
+                            var errorObj = eval("errorObj="+errMsg)
+                            alertError("Kill container "+delFirestChar(container.names[0])+" failed <br/>"+errorObj.errMsg);
                             cmdContainerKill.close();
                             cmdContainerKill.release();
                         });
@@ -180,23 +179,21 @@
                                 var cmdContainerRemove = new CmdContainerRemove(id);
                                 connect(cmdContainerRemove);
 
-                                var blockDialog = openBlockDialog("Killing Container...");
-                                cmdContainerRemove.send(function(){
+                                var blockDialog = openBlockDialog("Remove Container...");
+                                cmdContainerRemove.send(function(msg){
                                     blockDialog.hide();
                                     alert("<span class='uk-text-large uk-text-primary'>Container <span class='uk-text-large uk-text-danger'>"+delFirestChar(container.names[0])+"</span> removed.</span>")
                                     cmdContainerRemove.close();
                                     cmdContainerRemove.release();
                                     containerListVue.query();
-                                }, function(){
+                                }, function(status, errMsg){
                                     blockDialog.hide();
-                                    alertError("Kill container "+delFirestChar(container.names[0])+" failed");
+                                    var errorObj = eval("errorObj="+errMsg)
+                                    alertError("Remove container "+delFirestChar(container.names[0])+" failed <br/>"+errorObj.errMsg);
                                     cmdContainerRemove.close();
                                     cmdContainerRemove.release();
                                 });
 
-                                cmdContainerRemove.close();
-                                cmdContainerRemove.release();
-                                containerListVue.query();
                             } catch (e) {
                                 alertError(e)
                             }
@@ -312,23 +309,22 @@
                         cmdContainerCommit.pause(this.commitParams.pause);
                         connect(cmdContainerCommit);
 
-                        var blockDialog = openBlockDialog("Killing Container...");
-                        cmdContainerCommit.send(function(){
+                        var blockDialog = openBlockDialog("Commit Container...");
+                        cmdContainerCommit.send(function(msg){
                             blockDialog.hide();
-                            alert("<span class='uk-text-large uk-text-primary'>Container <span class='uk-text-large uk-text-danger'>"+delFirestChar(container.names[0])+"</span> commited.</span>")
+                            alert("<span class='uk-text-large uk-text-primary'>Container commited success.</span>")
                             cmdContainerCommit.close();
                             cmdContainerCommit.release();
-                        }, function(){
+                            closeDialog("commitDialog");
+                        }, function(status, errMsg){
                             blockDialog.hide();
-                            alertError("Kill container "+delFirestChar(container.names[0])+" failed");
+                            var errorObj = eval("errorObj="+errMsg)
+                            alertError("Commit container "+delFirestChar(container.names[0])+" failed <br/>"+errorObj.errMsg);
                             cmdContainerCommit.close();
                             cmdContainerCommit.release();
+                            closeDialog("commitDialog");
                         });
 
-                        cmdContainerCommit.close();
-                        cmdContainerCommit.release();
-                        alert("Commit contianer success.");
-                        closeDialog("commitDialog");
                     } catch (e) {
                         alertError(e)
                     }
@@ -401,7 +397,7 @@
                 </div>
             </div>
         </div>
-        <table id="containerList" class="uk-table uk-overflow-container uk-panel-box">
+        <table id="containerList" class="uk-table uk-overflow-container uk-panel-box" style="table-layout: fixed; word-wrap: break-word">
             <thead>
             <tr>
                 <th class="uk-text-center table_colume_index">NO.</th>
@@ -417,17 +413,19 @@
             <tbody>
             <tr v-for="(container,index) in containerList">
                 <td class="uk-text-center uk-text-middle uk-text-small">{{index}}</td>
-                <td class="uk-text-bold uk-text-middle uk-text-primary">
+                <td class="uk-text-bold uk-text-middle uk-text-primary uk-text-small"
+                   :title="container.names[0]|delFirestChar">
                     <span v-if="container.labels['com.docker.swarm.task']==''"
                           class="icon uk-icon-gears uk-text-danger" title="Swarm container"></span>
                     <span v-if="container.labels['com.docker.swarm.task']==undefined"
                           class="icon uk-icon-desktop uk-text-success uk-text-small" title="Stander container"></span>
-                     {{container.names[0]|delFirestChar}}
+                     {{container.names[0]|delFirestChar|shortString(20)}}
                 </td>
                 <td class="uk-text-middle ">
                     <a :href="'../image/viewer.html?id='+container.imageId"
-                    class="uk-text-warning uk-text-bold uk-text-small">
-                        {{container.image | shortDockerId(64)}}
+                    class="uk-text-warning uk-text-bold uk-text-small"
+                       :title="container.image">
+                        {{container.image | shortString(64)}}
                     </a>
                 </td>
                 <td class="uk-text-middle">
@@ -538,7 +536,7 @@
     <div class="uk-width-6-6">
         <div style="min-height:40px;" class="uk-text-center uk-margin-bottom">
             <div><img height="27" width="120" src="../../img/logo.png"/></div>
-            <div>CopyRight <span class="uk-icon-copyright"></span> Voovan Vsetful</div>
+            <div>Copyright <span class="uk-icon-copyright"></span> Voovan Vsetful</div>
             <div>Powered by Voovan open source framework.</div>
         </div>
     </div>

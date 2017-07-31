@@ -70,7 +70,7 @@
                             var imageRepoTag = $('#imageRepoTag').val();
 
                             if(imageRepoTag=="image"){
-                                imageRepoTag = shortDockerId(image.id, 12);
+                                imageRepoTag = shortString(image.id, 12);
                             }
 
                             var cmdImageRemove = new CmdImageRemove(imageRepoTag);
@@ -92,7 +92,7 @@
                         try {
                             if(newvalue!=""){
                                 var repoAndTag = newvalue.split(":");
-                                var cCmdImageTag = new CmdImageTag(shortDockerId(image.id,12));
+                                var cCmdImageTag = new CmdImageTag(shortString(image.id,12));
                                 connect(cCmdImageTag);
                                 cCmdImageTag.repo(repoAndTag[0])
                                 cCmdImageTag.tag(repoAndTag[1])
@@ -116,16 +116,17 @@
                         cmdImageCreate.tag(this.registryParam.tag);
 
                         var blockDialog = openBlockDialog("Pulling image...");
-                        cmdImageCreate.send(function(){
+                        cmdImageCreate.send(function(msg){
                             blockDialog.hide();
                             alert("<span class='uk-text-large uk-text-primary'>" +
                                 "Pull image " +
                                 "finished.</span>")
                             cmdImageCreate.close();
                             cmdImageCreate.release();
-                        }, function(){
+                        }, function(status, errMsg){
                             blockDialog.hide();
-                            alertError("Pull image failed");
+                            var errorObj = eval("errorObj="+errMsg)
+                            alertError("Pull image failed <br/>"+errorObj.errMsg);
                             cmdImageCreate.close();
                             cmdImageCreate.release();
                         });
@@ -231,7 +232,7 @@
             <tbody>
             <tr v-for="(image,index) in imageList">
                 <td class="uk-text-center uk-text-middle uk-text-small">{{index+1}}</td>
-                <td class="uk-text-bold uk-text-middle uk-text-success">{{image.id|shortDockerId(12)}}</td>
+                <td class="uk-text-bold uk-text-middle uk-text-success" :title="image.id">{{image.id|shortString(12)}}</td>
                 <td class="uk-text-bold uk-text-middle uk-text-primary">
                     <span v-if="image.repoTags!=null" v-for="(repoTag,index) in image.repoTags">
                         <code v-if="repoTag!=null">{{repoTag}}</code> &nbsp;
@@ -319,7 +320,7 @@
     <div class="uk-width-6-6">
         <div style="min-height:40px;" class="uk-text-center uk-margin-bottom">
             <div><img height="27" width="120" src="../../img/logo.png"/></div>
-            <div>CopyRight <span class="uk-icon-copyright"></span> Voovan Vsetful</div>
+            <div>Copyright <span class="uk-icon-copyright"></span> Voovan Vsetful</div>
             <div>Powered by Voovan open source framework.</div>
             <div></div>
         </div>

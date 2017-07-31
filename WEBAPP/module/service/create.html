@@ -40,7 +40,7 @@
                     cpuReservation:0,
                     memoryReservation:0,
                     restartPolicy:{
-                        "condition":"none",
+                        "condition":"any",
                         "delay":0,
                         "maxAttempts":0,
                         "window":0
@@ -258,8 +258,8 @@
                             }
                         }
 
-                        var blockDialog = openBlockDialog(" Creating service ...");
-                        cmdServiceCreate.send(function(){
+                        var blockDialog = openBlockDialog("Creating service ...");
+                        cmdServiceCreate.send(function(msg){
                             blockDialog.hide()
                             cmdServiceCreate.close();
                             cmdServiceCreate.release();
@@ -267,7 +267,7 @@
                         }, function(status, errMsg){
                             blockDialog.hide()
                             var errorObj = eval("error="+errMsg)
-                            alertError("Create service failed. "+errorObj.errMsg);
+                            alertError("Create service failed. <br/>"+errorObj.errMsg);
                             cmdServiceCreate.close();
                             cmdServiceCreate.release();
                         });
@@ -572,7 +572,7 @@
     <div class="uk-width-6-6">
         <div style="min-height:40px;" class="uk-text-center uk-margin-bottom">
             <div><img height="27" width="120" src="../../img/logo.png"/></div>
-            <div>CopyRight <span class="uk-icon-copyright"></span> Voovan Vsetful</div>
+            <div>Copyright <span class="uk-icon-copyright"></span> Voovan Vsetful</div>
             <div>Powered by Voovan open source framework.</div>
             <div></div>
         </div>

@@ -8,6 +8,7 @@
 <link rel="stylesheet" href="../../css/uikit/uikit.css"/>
 <script src="../../js/common/jquery.min.js"></script>
 <script src="../../js/common/vue.min.js"></script>
+<script src="../../js/component/switch.js"></script>
 <script src="../../js/common/uikit.js"></script>
 
 <link rel="stylesheet" href="../../css/main.css"/>
@@ -30,7 +31,9 @@
                 },
                 createParams:{
                     name: "",
-                    driver:"null",
+                    driver:"bridge",
+                    internal:false,
+                    attachable: false,
                     gateway:"",
                     subnet:"",
                     ipRange:"",
@@ -65,10 +68,24 @@
                         alertError(e)
                     }
                 },
+                loadContainer: function(index){
+                    if($("#containerList"+index).attr("class").indexOf("uk-hidden") >= 0 )
+                        try {
+                            var network = this.networkList[index];
+                            var viewNetwork = getNetworkDetail(network.id);
+                            this.$set(network,"containers", viewNetwork.containers);
+                        } catch (e) {
+                            alertError(e)
+                        }
+                },
                 //移除方法
                 remove: function (network) {
                     name = network.name
                     id = network.id
+//                    if(network.internal==false){
+//                        alert("This network is an docker default network, please do not remove it.")
+//                        return;
+//                    }
                     UIkit.modal.confirm("<span class='uk-text-large uk-text-danger'>Are you sure to remove ?</span><hr/>" +
                         "<span class='uk-text-large uk-text-primary'> " + name + " </span>", function () {
                         try {
@@ -94,6 +111,9 @@
                         cmdNetworkCreate.checkDuplicate(true);
                         cmdNetworkCreate.name(this.createParams.name);
                         cmdNetworkCreate.driver(this.createParams.driver);
+                        cmdNetworkCreate.internal(this.createParams.internal);
+                        cmdNetworkCreate.attachable(this.createParams.attachable);
+
                         if(this.createParams.bridge!=""){
                            cmdNetworkCreate.options("com.docker.network.bridge.name",this.createParams.bridge);
                            cmdNetworkCreate.options("com.docker.network.bridge.default_bridge", "true");
@@ -102,6 +122,8 @@
                            cmdNetworkCreate.options("com.docker.network.bridge.host_binding_ipv4", "0.0.0.0");
                            cmdNetworkCreate.options("com.docker.network.driver.mtu", "1500");
                         }
+
+
 
                         if (this.createParams.gateway != "" && this.createParams.subnet != ""
                             && this.createParams.ipRange != "") {
@@ -181,11 +203,20 @@
             </tr>
             </thead>
 
-            <tbody>
-            <tr v-for="(network,index) in networkList">
+            <tbody v-for="(network,index) in networkList">
+            <tr>
                 <td class="uk-text-center uk-text-middle uk-text-small">{{index+1}}</td>
-                <td class="uk-text-bold uk-text-middle uk-text-primary">{{network.id|shortDockerId(12)}}</td>
-                <td class="uk-text-bold uk-text-middle uk-text-success">{{network.name}}</td>
+                <td class="uk-text-bold uk-text-middle uk-text-primary">
+                    <a :data-uk-toggle="'{target:\'#containerList'+index+'\'}'" @click="loadContainer(index)"
+                        :title="network.id">
+                        <span class="uk-icon-plus-square-o"></span> {{network.id|shortString(12)}}
+                    </a>
+                </td>
+                <td class="uk-text-bold uk-text-middle uk-text-success">
+                    <span class="uk-icon-exclamation-circle uk-text-warning" v-if="network.internal==false"></span>
+                    <span class="uk-icon-sitemap uk-text-primary" v-if="network.internal==true"></span>
+                    {{network.name}}
+                </td>
                 <td class="uk-text-middle">{{network.scope}}</td>
                 <td>{{network.driver}}</td>
                 <td class="uk-text-middle uk-text-success">
@@ -212,6 +243,43 @@
                         </div>
                     </div>
                 </td>
+            </tr>
+            <tr>
+            <tr :id="'containerList'+index" class="uk-hidden" style="background-color: #FFFFFF">
+                <td colspan="8">
+                    <div class="uk-grid uk-margin-small-left">
+                        <div class="uk-text-right uk-text-primary uk-vertical-align" style="width: 35px; margin-right: 10px;">
+                            <span class="uk-icon-small uk-icon-arrow-right uk-vertical-align-middle"></span>
+                        </div>
+                        <div class="uk-padding-remove" style="width: 92%;" >
+                            <table class="uk-table uk-panel-box  uk-table-condensed">
+                                <tr class="uk-alert">
+                                    <td class="uk-text-bold uk-text-center">Container ID</td>
+                                    <td class="uk-text-bold">Name</td>
+                                    <td class="uk-text-bold uk-text-center">IP</td>
+                                    <td class="uk-text-bold uk-text-center">MacAddress</td>
+                                </tr>
+                                <tr v-for="(container, id) in network.containers">
+                                    <td class="uk-text-center uk-text-small">
+                                        {{id  |shortString(12)}}
+                                    </td>
+                                    <td class="">
+                                        <a :href="'../container/list.html?id='+id" class="uk-text-danger uk-text-bold">
+                                            <span class="uk-text-primary uk-text-small" :title="container.name">{{container.name|delFirestChar|shortString(50)}}</span>
+                                        </a>
+                                    </td>
+                                    <td class="uk-text-center">
+                                        <span class="uk-text-danger uk-text-small">{{container.ipv4Address}}</span>
+                                    </td>
+                                    <td class="uk-text-center">
+                                        <span class="uk-text-warning uk-text-small">{{container.macAddress}}</span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </td>
+            </tr>
             </tr>
             </tbody>
         </table>
@@ -243,6 +311,20 @@
                         <td><input class="uk-form-width-medium" type="text"
                                    placeholder="bridge name" v-model="createParams.bridge"/></td>
                     </tr>
+                    <tr v-if="createParams.driver=='overlay'">
+                        <td class="dialogField">Attachable:</td>
+                        <td>
+                            <c-switch bind="createParams.attachable"
+                                      :switch='{"On":true,"Off":false}'
+                                      theme="uk-button-primary uk-button-small"></c-switch>
+                            </td>
+                    </tr>
+                    <tr>
+                        <td class="dialogField">Internal:</td>
+                        <td> <c-switch bind="createParams.internal"
+                                       :switch='{"On":true,"Off":false}'
+                                       theme="uk-button-primary uk-button-small"></c-switch></td>
+                    </tr>
                     <tr>
                         <td class="dialogField">IP Range:</td>
                         <td><input class="uk-form-width-medium" type="text"
@@ -271,7 +353,7 @@
     <div class="uk-width-6-6">
         <div style="min-height:40px;" class="uk-text-center uk-margin-bottom">
             <div><img height="27" width="120" src="../../img/logo.png"/></div>
-            <div>CopyRight <span class="uk-icon-copyright"></span> Voovan Vsetful</div>
+            <div>Copyright <span class="uk-icon-copyright"></span> Voovan Vsetful</div>
             <div>Powered by Voovan open source framework.</div>
             <div></div>
         </div>

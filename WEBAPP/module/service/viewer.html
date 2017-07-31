@@ -17,7 +17,7 @@
 <script lang="javascript" src="../../js/docker.js"></script>
 <script lang="javascript">
     function init() {
-        viewerVue = new Vue({
+        serviceViewerVue = new Vue({
                 el: '#viewerApp',
                 data:{
                 },
@@ -41,22 +41,13 @@
                     taskList: function () {
                         try {
                             var serviceId = getQueryString("id");
-                            var taskList = getTaskList(serviceId);
+                            var taskList = converTask(getTaskList(serviceId));
                             return taskList;
                         } catch (e) {
                             alertError(e)
                         }
                     },
-                    containers: function(){
-                        try {
-                            return getContainersIdAndName();
-                        } catch (e) {
-                            alertError(e)
-                        }
-                    },
-                    nodes: function(){
-                        return getNodesIdAndName();
-                    },
+
                     networks: function(){
                         try {
                             return getNetworksIdAndName();
@@ -93,7 +84,7 @@
                         <tbody>
                         <tr>
                             <td class="uk-width-1-10 uk-text-right summeryField">ID </td>
-                            <td class="uk-text-bold">{{viewService.id |shortDockerId(12)}}</td>
+                            <td class="uk-text-bold">{{viewService.id |shortString(12)}}</td>
                         </tr>
                         <tr>
                             <td class="uk-width-1-10 uk-text-right summeryField">Name </td>
@@ -215,7 +206,7 @@
                     <tr>
                         <th class="uk-width-1-10 uk-text-center">ID</th>
                         <th class="uk-width-1-10 uk-text-center">Slot</th>
-                        <th class="uk-width-2-10">Name ( node / host ) </th>
+                        <th class="uk-width-2-10">Node <span class="uk-text-small uk-text-muted">( name / host )</span></th>
                         <th class="uk-width-2-10">Container</th>
                         <th class="uk-width-1-10 uk-text-center">State</th>
                         <th class="uk-width-2-10 uk-text-center">Create</th>
@@ -224,22 +215,22 @@
 
                     <tbody>
                     <tr v-for="(task,index) in taskList">
-                        <td class=" uk-text-middle uk-text-bold uk-text-primary uk-text-center">{{task.id | shortDockerId(12)}}</td>
+                        <td class=" uk-text-middle uk-text-bold uk-text-primary uk-text-center">{{task.id | shortString(12)}}</td>
                         <td class=" uk-text-middle uk-text-center">{{task.slot}}</td>
                         <td class=" uk-text-middle uk-text-bold ">
                             <a class="uk-text-success" :href="'../node/list.html?id='+task.nodeId">
-                                <span class="uk-text-warning">{{nodes[task.nodeId].name}}</span> /
-                                <span class="uk-text-success">{{nodes[task.nodeId].hostname}}</span>
+                                <span class="uk-text-warning">{{task.nodeName}}</span> /
+                                <span class="uk-text-success">{{task.hostname}}</span>
                             </a>
                         </td>
                         <td class=" uk-text-middle uk-text-bold ">
                             <a class="uk-text-danger" :href="'/module/container/viewer.html?id='+task.status.containerStatus.containerId"
                                target="viewer"
-                               v-if="containers[task.status.containerStatus.containerId]!=null">
-                                <span class="uk-text-success running"></span> {{containers[task.status.containerStatus.containerId]|delFirestChar|shortDockerId(18)}}
+                               v-if="task.status.containerStatus.containerName!=null">
+                                <span class="uk-text-success running"></span> {{task.status.containerStatus.containerName|delFirestChar|shortString(18)}}
                             </a>
                             <span class="uk-text-danger" v-else>
-                                <span class="uk-text-primary stop"></span> {{task.status.containerStatus.containerId|shortDockerId(12)}}
+                                <span class="uk-text-primary stop"></span> {{task.status.containerStatus.containerId|shortString(12)}}
                             </span>
                         </td>
                         <td class=" uk-text-middle uk-text-bold uk-text-center">{{task.status.state}}</td>
@@ -253,7 +244,7 @@
     <div class="uk-width-6-6">
         <div style="min-height:40px;" class="uk-text-center uk-margin-bottom">
             <div><img height="27" width="120" src="../../img/logo.png"/></div>
-            <div>CopyRight <span class="uk-icon-copyright"></span> Voovan Vsetful</div>
+            <div>Copyright <span class="uk-icon-copyright"></span> Voovan Vsetful</div>
             <div>Powered by Voovan open source framework.</div>
             <div></div>
         </div>
